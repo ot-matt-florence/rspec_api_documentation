@@ -2,7 +2,7 @@ module RspecApiDocumentation
   module Writers
     # Base class for writers that write HTML
     class GeneralMarkupWriter < Writer
-      INDEX_FILE_NAME = 'index'
+      INDEX_FILE_NAME = 'readme'
 
       # Write out the generated documentation
       def write

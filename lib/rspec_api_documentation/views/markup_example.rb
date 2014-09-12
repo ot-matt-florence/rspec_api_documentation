@@ -29,6 +29,14 @@ module RspecApiDocumentation
         basename = Digest::MD5.new.update(description).to_s if basename.blank?
         "#{basename}.#{extension}"
       end
+      def valid_json? json_
+        begin
+          JSON.parse(json_)
+          return true
+        rescue 
+          return false
+        end
+      end
 
       def requests
         super.map do |hash|
@@ -41,10 +49,15 @@ module RspecApiDocumentation
           # puts "uri decode hash: #{Hash[URI.decode_www_form(hash[:request_body])]}" rescue nil
           # puts "uri decode hash: #{Hash[URI.decode_www_form(hash[:request_body])].to_json}" rescue nil
           # puts "pretty: #{JSON.pretty_generate(Hash[URI.decode_www_form(hash[:request_body])].to_json)}"
-          rb_hash = Hash[URI.decode_www_form(hash[:request_body])] rescue nil
+          if valid_json?(hash[:request_body])
+            rb_hash = JSON.pretty_generate(JSON(hash[:request_body])) rescue nil
+          else
+            rb_hash = JSON.pretty_generate(Hash[URI.decode_www_form(hash[:request_body])]) rescue nil
+          end
           # puts "rb_hash: #{rb_hash}"
           # puts "pretty: #{JSON.pretty_generate(rb_hash)}" rescue nil
-          hash[:request_body] = JSON.pretty_generate(rb_hash) rescue nil
+          # binding.pry if hash[:request_body] && hash[:request_body].include?("globalVisitId")
+          hash[:request_body] = rb_hash rescue nil
           if @host
             if hash[:curl].is_a? RspecApiDocumentation::Curl
               hash[:curl] = hash[:curl].output(@host, @filter_headers)
